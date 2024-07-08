@@ -1,1 +1,2 @@
-this project is part of the EMNetChain -> https://github.com/SkillfulElectro/EMDisi_lib.git
+# EMDisi
+- this project is simple server starter for EMNetChain to repair broken nodes and make chain usable again
