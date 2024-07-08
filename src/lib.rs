@@ -37,27 +37,32 @@ fn handle(mut stream: TcpStream, bounds: Arc<Mutex<HashMap<i32, Peers>>>) {
         if let Some(index) = message.find('}') {
             let json_str = &message[..=index];
             let json_map = json_scan(json_str);
-            if let Some(JsonValue::Object(json_map)) = json_map.get("msg") {
+            if let Some(JsonValue::String(msg)) = json_map.get("msg") {
                 if let Some(JsonValue::Number(id)) = json_map.get("id") {
                     if let Some(JsonValue::String(ip)) = json_map.get("ip") {
-                        let id = *id as i32;
-                        let mut bounds = bounds.lock().unwrap();
-                        if bounds.contains_key(&id) {
-                            let current_ip = bounds.get_mut(&id).unwrap().ip_port.clone();
-                            let response = format!(r#"{{"msg":"CONNECT","ip":"{}"}}"#, current_ip);
-                            if let Err(e) = stream.write_all(response.as_bytes()) {
-                                eprintln!("Failed to write to stream: {}", e);
+                        if msg == "RECONNECT"{
+                            let id = *id as i32;
+                            let mut bounds = bounds.lock().unwrap();
+                            if bounds.contains_key(&id) {
+                                let current_ip = bounds.get_mut(&id).unwrap().ip_port.clone();
+                                let mut response = format!(r#"{{"msg":"CONNECT","ip":"{}"}}"#, current_ip);
+                               
+                                if let Err(e) = stream.write_all(response.as_bytes()) {
+                                    println!("Failed to write to stream: {}", e);
+                                }
+                                response = format!(r#"{{"msg":"COoNNECT","ip":"{}"}}"#, ip);
+                                
+                                if let Err(e) = bounds.get_mut(&id).unwrap().stream.write_all(response.as_bytes()) {
+                                    println!("Failed to write to stream: {}", e);
+                                }
+                                bounds.remove(&id);
+                            } else {
+                                let peer = Peers {
+                                    ip_port: ip.clone(),
+                                    stream: stream.try_clone().expect("Failed to clone stream"),
+                                };
+                                bounds.insert(id, peer);
                             }
-                            if let Err(e) = bounds.get_mut(&id).unwrap().stream.write_all(response.as_bytes()) {
-                                eprintln!("Failed to write to stream: {}", e);
-                            }
-                            bounds.remove(&id);
-                        } else {
-                            let peer = Peers {
-                                ip_port: ip.clone(),
-                                stream: stream.try_clone().expect("Failed to clone stream"),
-                            };
-                            bounds.insert(id, peer);
                         }
                     }
                 }
@@ -79,7 +84,7 @@ pub fn on_dis(ip_port: &String) {
                 });
             }
             Err(e) => {
-                eprintln!("Connection failed: {}", e);
+                println!("Connection failed: {}", e);
             }
         }
     }

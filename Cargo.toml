@@ -1,6 +1,6 @@
 [package]
 name = "EMDisi_lib"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
 authors = ["ElectroMutex"]
 description = "This project is part of the EMNetChain"
@@ -11,4 +11,4 @@ repository = "https://github.com/SkillfulElectro/EMDisi.git"
 readme = "README.md"
 
 [dependencies]
-json_parser_simple = "0.1.1"
+json_parser_simple = "0.1.2"
