@@ -50,7 +50,7 @@ fn handle(mut stream: TcpStream, bounds: Arc<Mutex<HashMap<i32, Peers>>>) {
                                 if let Err(e) = stream.write_all(response.as_bytes()) {
                                     println!("Failed to write to stream: {}", e);
                                 }
-                                response = format!(r#"{{"msg":"COoNNECT","ip":"{}"}}"#, ip);
+                                response = format!(r#"{{"msg":"CONNECT","ip":"{}"}}"#, ip);
                                 
                                 if let Err(e) = bounds.get_mut(&id).unwrap().stream.write_all(response.as_bytes()) {
                                     println!("Failed to write to stream: {}", e);
