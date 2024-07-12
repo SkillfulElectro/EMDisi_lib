@@ -26,7 +26,7 @@ impl Clone for Peers {
     }
 }
 
-fn handle(mut stream: TcpStream, bounds: Arc<Mutex<HashMap<String, Peers>>>) {
+fn handle(mut stream: TcpStream, bounds: Arc<Mutex<HashMap<String , Peers>>>) {
     let mut buffer = [0; 512];
     while let Ok(size) = stream.read(&mut buffer) {
         if size == 0 {
@@ -42,25 +42,29 @@ fn handle(mut stream: TcpStream, bounds: Arc<Mutex<HashMap<String, Peers>>>) {
                     if let Some(JsonValue::String(ip)) = json_map.get("ip") {
                         if msg == "RECONNECT"{
                             let mut bounds = bounds.lock().unwrap();
-                            if bounds.contains_key(&id) {
-                                let current_ip = bounds.get_mut(&id).unwrap().ip_port.clone();
+                            if bounds.contains_key(id) {
+                                let current_ip = bounds.get_mut(id).unwrap().ip_port.clone();
                                 let mut response = format!(r#"{{"msg":"CONNECT","ip":"{}"}}"#, current_ip);
                                
                                 if let Err(e) = stream.write_all(response.as_bytes()) {
                                     println!("Failed to write to stream: {}", e);
+                                    break;
                                 }
                                 response = format!(r#"{{"msg":"CONNECT","ip":"{}"}}"#, ip);
                                 
-                                if let Err(e) = bounds.get_mut(&id).unwrap().stream.write_all(response.as_bytes()) {
+                                if let Err(e) = bounds.get_mut(id).unwrap().stream.write_all(response.as_bytes()) {
                                     println!("Failed to write to stream: {}", e);
+                                    break;
                                 }
-                                bounds.remove(&id);
+                                bounds.remove(id);
+                                break;
                             } else {
                                 let peer = Peers {
                                     ip_port: ip.clone(),
                                     stream: stream.try_clone().expect("Failed to clone stream"),
                                 };
-                                bounds.insert(id, peer);
+                                bounds.insert(id.to_string(), peer);
+                                break;
                             }
                         }
                     }
@@ -72,7 +76,9 @@ fn handle(mut stream: TcpStream, bounds: Arc<Mutex<HashMap<String, Peers>>>) {
 
 pub fn on_dis(ip_port: &String) {
     let bounds = Arc::new(Mutex::new(HashMap::new()));
-    let listener = TcpListener::bind(ip_port).expect("Could not bind");
+    let listener = TcpListener::bind(ip_port.trim().to_string()).expect("Could not bind");
+    println!("EMDisi Server listening on {}" , ip_port.trim().to_string());
+    
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {

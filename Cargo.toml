@@ -1,6 +1,6 @@
 [package]
 name = "EMDisi_lib"
-version = "0.1.2"
+version = "0.1.7"
 edition = "2021"
 authors = ["ElectroMutex"]
 description = "This project is part of the EMNetChain"
