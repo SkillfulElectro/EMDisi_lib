@@ -26,7 +26,7 @@ impl Clone for Peers {
     }
 }
 
-fn handle(mut stream: TcpStream, bounds: Arc<Mutex<HashMap<i32, Peers>>>) {
+fn handle(mut stream: TcpStream, bounds: Arc<Mutex<HashMap<String, Peers>>>) {
     let mut buffer = [0; 512];
     while let Ok(size) = stream.read(&mut buffer) {
         if size == 0 {
@@ -38,10 +38,9 @@ fn handle(mut stream: TcpStream, bounds: Arc<Mutex<HashMap<i32, Peers>>>) {
             let json_str = &message[..=index];
             let json_map = json_scan(json_str);
             if let Some(JsonValue::String(msg)) = json_map.get("msg") {
-                if let Some(JsonValue::Number(id)) = json_map.get("id") {
+                if let Some(JsonValue::String(id)) = json_map.get("id") {
                     if let Some(JsonValue::String(ip)) = json_map.get("ip") {
                         if msg == "RECONNECT"{
-                            let id = *id as i32;
                             let mut bounds = bounds.lock().unwrap();
                             if bounds.contains_key(&id) {
                                 let current_ip = bounds.get_mut(&id).unwrap().ip_port.clone();
